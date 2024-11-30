@@ -1,3 +1,5 @@
+import re
+
 def extract_quote_strings(string: str) -> list:
     """
     Extracts all substrings surrounded by a pair of quotes. Quotes can be
@@ -31,7 +33,7 @@ def extract_quote_strings(string: str) -> list:
             current_token += char
             if char == quote_char:
                 # If it's the closing quote, save the token
-                strings_found.append(current_token.strip(quote_char))
+                strings_found.append(current_token.strip(quote_char).encode().decode("unicode_escape"))
                 current_token = ""
                 inside_quotes = False
                 quote_char = ""
@@ -49,26 +51,61 @@ def is_following_rule(string: str, rule: dict) -> bool:
                 and string.endswith(rule["end_string"])
                 and len(string) >= 2
             )
+        case "regex":
+            return re.fullmatch(rule["pattern"], string)
             
 
-def split_rule_string(rule_string: str):
-    (type_part, match_part) = rule_string.split("->")
+def split_rule_string(rule_string: str): 
+    arrow = rule_string.split(maxsplit=3)[-2]
+    print(arrow)
+ 
+    (type_part, match_part) = rule_string.split(arrow)
     type_part = type_part.strip()
     match_part = match_part.strip()
     (class_name, subclass_name) = type_part.split(" ")
+    match arrow:
+        case "->":
+            match_type = "normal"
+        case "=>":
+            match_type = "greedy"
     
-    return match_part, class_name, subclass_name 
+    return match_part, class_name, subclass_name, match_type
 
 
-rules_string = open("rules.lexif", "r").read()
-rule_strings = [rule for rule in rules_string.split("\n") if rule.strip() != ""]
+rules_file = open("rules.lexif", "r").read()
+all_lines = [rule for rule in rules_file.split("\n") if rule.strip() != ""]
+
+constant_strings = []
+rule_strings = []
+current_header = ""
+for line in all_lines:
+    if line.startswith("#"):
+        # found a header
+        current_header = line
+        continue
+    
+    match current_header:
+        case "#CONSTANTS":
+            constant_strings.append(line)
+        case "#RULES":
+            rule_strings.append(line)
+
+constants = []
+for constant_string in constant_strings:
+    if constant_string.strip() == "":
+        continue
+    
+    (name, replace) = constant_string.split(" -> ", maxsplit=1)
+    constants.append({ "name": name, "replace": replace.encode().decode("unicode_escape") })
+
 rules = []
 for rule_string in rule_strings:
-    rule_string = rule_string.replace("[NEWLINE]", '"\n"')
+    for constant in constants:
+        rule_string = rule_string.replace(constant["name"], constant["replace"])
     
-    (match_part, class_name, subclass_name) = split_rule_string(rule_string)
+    (match_part, class_name, subclass_name, match_type) = split_rule_string(rule_string)
     
-    rule = {"class": class_name, "subclass": subclass_name}
+    rule = {"class": class_name, "subclass": subclass_name, "match_type": match_type}
 
     # equal
     if match_part.startswith("is"):
@@ -82,10 +119,15 @@ for rule_string in rule_strings:
         rule["rule_type"] = "between"
 
         end_strings = extract_quote_strings(match_part)
-        
 
         rule["start_string"] = end_strings[0]
         rule["end_string"] = end_strings[1]
+        rules.append(rule)
+        continue
+    
+    if match_part.startswith("matches"):
+        rule["rule_type"] = "regex"
+        rule["pattern"] = match_part.strip("matches").strip().encode().decode("unicode_escape")
         rules.append(rule)
         continue
 
@@ -98,7 +140,20 @@ for i, char in enumerate(code):
     current_token += char
 
     for rule in rules:
-        if is_following_rule(current_token, rule):
+        is_normal_pass = rule["match_type"] == "normal" and is_following_rule(current_token, rule)
+        if i < len(code) - 1:
+            is_greedy_pass = (
+                rule["match_type"] == "greedy" 
+                and is_following_rule(current_token, rule) 
+                and not is_following_rule(current_token + code[i + 1], rule)
+            )
+        else:
+            is_greedy_pass = (
+                rule["match_type"] == "greedy" 
+                and is_following_rule(current_token, rule)
+            )
+        
+        if is_normal_pass or is_greedy_pass:
             tokens.append(
                 {
                     "class": rule["class"],
