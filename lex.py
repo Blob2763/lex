@@ -12,8 +12,8 @@ def extract_quote_strings(string: str) -> list:
         string (str): the main string
 
     Returns:
-        list: a list of all the substrings found, the original quotes are not 
-        in the string
+        substrings_found (list): a list of all the substrings found, the 
+        original quotes are not in the string
     """
 
     strings_found = []
@@ -42,6 +42,17 @@ def extract_quote_strings(string: str) -> list:
 
 
 def is_following_rule(string: str, rule: dict) -> bool:
+    """
+    Checks whether a certain string is following a rule.
+    
+    Parameters:
+        string (str): the string to test
+        rule (dict): the rule to test against
+
+    Returns:
+        is_pass (bool): whether or not the string follows the rule
+    """
+    
     match rule["rule_type"]:
         case "equal":
             return string == rule["check_string"]
@@ -57,6 +68,19 @@ def is_following_rule(string: str, rule: dict) -> bool:
             return string.endswith(rule["end_string"])
 
 def split_rule_string(rule_string: str): 
+    """
+    Splits a rule string into separate parts.
+    
+    Parameters:
+        rule_string (str): the rule string to be split
+
+    Returns:
+        match_part (str): all the text after the arrow
+        class_name (str): the name of the class of the rule
+        subclass_name (str): the name of the subclass of the rule
+        match_type (str): the type of match defined by the arrow
+    """
+    
     arrow = rule_string.split(maxsplit=3)[-2]
     (type_part, match_part) = rule_string.split(arrow)
     type_part = type_part.strip()
@@ -72,6 +96,16 @@ def split_rule_string(rule_string: str):
 
 
 def generate_rules(rules_file):
+    """
+    Generates a list of rules based on the contents of a rules file.
+    
+    Parameters:
+        rules_file (str): the rules in the rules file
+
+    Returns:
+        rules (list): a list of all the rules as dictionaries
+    """
+    
     all_lines = [rule for rule in rules_file.split("\n") if rule.strip() != ""]
 
     constant_strings = []
@@ -140,7 +174,21 @@ def generate_rules(rules_file):
     
     return rules
 
-def tokenise(rules_path, code_path):
+def tokenise(rules_path: str, code_path: str) -> list:
+    """
+    Splits the code into a list of tokens.
+    
+    Parameters:
+        rules_path (str): the path to the rules file (must be a .lexif file)
+        code_path (str): the path to the code to be tokenised
+
+    Returns:
+        tokens (list): a list of all the token dictionaries
+    """
+    
+    if not rules_path.endswith(".lexif"):
+        raise ValueError("rules file should be a .lexif file")
+    
     rules_file = open(rules_path, "r").read()
     rules = generate_rules(rules_file)
 
@@ -189,11 +237,13 @@ def tokenise(rules_path, code_path):
             }
         )
 
-    for rule in rules:
-        print(rule)
-    print()
-    for token in tokens:
-        print(token)
+    # for rule in rules:
+    #     print(rule)
+    # print()
+    # for token in tokens:
+    #     print(token)
+        
+    return tokens
 
 
-tokenise("rules.lexif", "test_code.txt")
+print(tokenise("rules.lexif", "test_code.txt"))
