@@ -244,6 +244,3 @@ def tokenise(rules_path: str, code_path: str) -> list:
     #     print(token)
         
     return tokens
-
-
-print(tokenise("rules.lexif", "test_code.txt"))

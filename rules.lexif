@@ -1,0 +1,13 @@
+#CONSTANTS
+[NEWLINE] -> "\n"
+
+#RULES
+IDENTIFIER PRINT -> is "print"
+
+LITERAl STRING -> between '"' and '"'
+LITERAl STRING -> between "'" and "'"
+
+DELIMITER LPAREN -> is "("
+DELIMITER RPAREN -> is ")"
+
+IGNORE COMMENT -> between "#" and [NEWLINE]
