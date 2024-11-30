@@ -53,12 +53,11 @@ def is_following_rule(string: str, rule: dict) -> bool:
             )
         case "regex":
             return re.fullmatch(rule["pattern"], string)
-            
+        case "endswith":
+            return string.endswith(rule["end_string"])
 
 def split_rule_string(rule_string: str): 
     arrow = rule_string.split(maxsplit=3)[-2]
-    print(arrow)
- 
     (type_part, match_part) = rule_string.split(arrow)
     type_part = type_part.strip()
     match_part = match_part.strip()
@@ -72,115 +71,129 @@ def split_rule_string(rule_string: str):
     return match_part, class_name, subclass_name, match_type
 
 
-rules_file = open("rules.lexif", "r").read()
-all_lines = [rule for rule in rules_file.split("\n") if rule.strip() != ""]
+def generate_rules(rules_file):
+    all_lines = [rule for rule in rules_file.split("\n") if rule.strip() != ""]
 
-constant_strings = []
-rule_strings = []
-current_header = ""
-for line in all_lines:
-    if line.startswith("#"):
-        # found a header
-        current_header = line
-        continue
+    constant_strings = []
+    rule_strings = []
+    current_header = ""
+    for line in all_lines:
+        if line.startswith("#"):
+            # found a header
+            current_header = line
+            continue
+        
+        match current_header:
+            case "#CONSTANTS":
+                constant_strings.append(line)
+            case "#RULES":
+                rule_strings.append(line)
+
+    constants = []
+    for constant_string in constant_strings:
+        if constant_string.strip() == "":
+            continue
+        
+        (name, replace) = constant_string.split(" -> ", maxsplit=1)
+        constants.append({ "name": name, "replace": replace.encode().decode("unicode_escape") })
+
+    rules = []
+    for rule_string in rule_strings:
+        for constant in constants:
+            rule_string = rule_string.replace(constant["name"], constant["replace"])
+        
+        (match_part, class_name, subclass_name, match_type) = split_rule_string(rule_string)
+        
+        rule = {"class": class_name, "subclass": subclass_name, "match_type": match_type}
+
+        # equal
+        if match_part.startswith("is"):
+            rule["rule_type"] = "equal"
+            rule["check_string"] = extract_quote_strings(match_part)[0]
+            rules.append(rule)
+            continue
+
+        # between two certain strings
+        if match_part.startswith("between"):
+            rule["rule_type"] = "between"
+
+            end_strings = extract_quote_strings(match_part)
+
+            rule["start_string"] = end_strings[0]
+            rule["end_string"] = end_strings[1]
+            rules.append(rule)
+            continue
+        
+        # check for regex
+        if match_part.startswith("matches"):
+            rule["rule_type"] = "regex"
+            rule["pattern"] = match_part.strip("matches").strip().encode().decode("unicode_escape")
+            rules.append(rule)
+            continue
+        
+        # check if ends with string
+        if match_part.startswith("endswith"):
+            rule["rule_type"] = "endswith"
+            rule["end_string"] = extract_quote_strings(match_part)[0]
+            rules.append(rule)
+            continue
     
-    match current_header:
-        case "#CONSTANTS":
-            constant_strings.append(line)
-        case "#RULES":
-            rule_strings.append(line)
+    return rules
 
-constants = []
-for constant_string in constant_strings:
-    if constant_string.strip() == "":
-        continue
-    
-    (name, replace) = constant_string.split(" -> ", maxsplit=1)
-    constants.append({ "name": name, "replace": replace.encode().decode("unicode_escape") })
+def tokenise(rules_path, code_path):
+    rules_file = open(rules_path, "r").read()
+    rules = generate_rules(rules_file)
 
-rules = []
-for rule_string in rule_strings:
-    for constant in constants:
-        rule_string = rule_string.replace(constant["name"], constant["replace"])
-    
-    (match_part, class_name, subclass_name, match_type) = split_rule_string(rule_string)
-    
-    rule = {"class": class_name, "subclass": subclass_name, "match_type": match_type}
+    code = open(code_path, "r").read()
 
-    # equal
-    if match_part.startswith("is"):
-        rule["rule_type"] = "equal"
-        rule["check_string"] = extract_quote_strings(match_part)[0]
-        rules.append(rule)
-        continue
+    tokens = []
+    current_token = ""
+    recent_token_end = -1
+    for i, char in enumerate(code):
+        current_token += char
 
-    # between two certain strings
-    if match_part.startswith("between"):
-        rule["rule_type"] = "between"
-
-        end_strings = extract_quote_strings(match_part)
-
-        rule["start_string"] = end_strings[0]
-        rule["end_string"] = end_strings[1]
-        rules.append(rule)
-        continue
-    
-    if match_part.startswith("matches"):
-        rule["rule_type"] = "regex"
-        rule["pattern"] = match_part.strip("matches").strip().encode().decode("unicode_escape")
-        rules.append(rule)
-        continue
-
-code = open("test_code.txt", "r").read()
-
-tokens = []
-current_token = ""
-recent_token_end = -1
-for i, char in enumerate(code):
-    current_token += char
+        for rule in rules:
+            is_normal_pass = rule["match_type"] == "normal" and is_following_rule(current_token, rule)
+            if i < len(code) - 1:
+                is_greedy_pass = (
+                    rule["match_type"] == "greedy" 
+                    and is_following_rule(current_token, rule) 
+                    and not is_following_rule(current_token + code[i + 1], rule)
+                )
+            else:
+                is_greedy_pass = (
+                    rule["match_type"] == "greedy" 
+                    and is_following_rule(current_token, rule)
+                )
+            
+            if is_normal_pass or is_greedy_pass:
+                tokens.append(
+                    {
+                        "class": rule["class"],
+                        "subclass": rule["subclass"],
+                        "content": current_token,
+                        "start_position": recent_token_end + 1,
+                        "end_position": i
+                    }
+                )
+                recent_token_end = i
+                current_token = ""
+                break
+    if current_token != "":
+        tokens.append(
+            {
+                "class": "ERROR",
+                "subclass": "UNFIISHED_TOKEN",
+                "content": current_token,
+                "start_position": recent_token_end + 1
+            }
+        )
 
     for rule in rules:
-        is_normal_pass = rule["match_type"] == "normal" and is_following_rule(current_token, rule)
-        if i < len(code) - 1:
-            is_greedy_pass = (
-                rule["match_type"] == "greedy" 
-                and is_following_rule(current_token, rule) 
-                and not is_following_rule(current_token + code[i + 1], rule)
-            )
-        else:
-            is_greedy_pass = (
-                rule["match_type"] == "greedy" 
-                and is_following_rule(current_token, rule)
-            )
-        
-        if is_normal_pass or is_greedy_pass:
-            tokens.append(
-                {
-                    "class": rule["class"],
-                    "subclass": rule["subclass"],
-                    "content": current_token,
-                    "start_position": recent_token_end + 1,
-                    "end_position": i
-                }
-            )
-            recent_token_end = i
-            current_token = ""
-            break
-if current_token != "":
-    tokens.append(
-        {
-            "class": "ERROR",
-            "subclass": "UNFIISHED_TOKEN",
-            "content": current_token,
-            "start_position": recent_token_end + 1
-        }
-    )
+        print(rule)
+    print()
+    for token in tokens:
+        print(token)
 
-for rule in rule_strings:
-    print(rule)
-print()
-for rule in rules:
-    print(rule)
-print()
-for token in tokens:
-    print(token)
+
+tokenise("rules.lexif", "test_code.txt")
