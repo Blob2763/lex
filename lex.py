@@ -237,10 +237,10 @@ def tokenise(rules_path: str, code_path: str) -> list:
             }
         )
 
-    for rule in rules:
-        print(rule)
-    print()
-    for token in tokens:
-        print(token)
+    # for rule in rules:
+    #     print(rule)
+    # print()
+    # for token in tokens:
+    #     print(token)
     
     return tokens
