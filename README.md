@@ -80,9 +80,28 @@ The rule type tells lex how to detect the token
 | Rule type  | Meaning                                                                        | Example usage                           | Notes |
 |------------|--------------------------------------------------------------------------------|-----------------------------------------|-------|
 | `is`       | Looks for an exact match to a string                                           | `DELIMITER LPAREN -> is "("`            |       |
-| `between`  | Looks for something that starts with the first string and ends with the second | `LITERAl STRING -> between '"' and '"'` | The word `and` is not really needed, as long as there is a gap between the strings, you can put anything in there |
+| `between`  | Looks for something that starts with the first string and ends with the second | `LITERAl STRING -> between '"' and '"'` | The word `and` is not really needed, as long as there is a gap between the strings, you can put anything in there. The surrounding strings are included in the token content. |
 | `matches`  | Looks for a string that matched a regex pattern                                | `LITERAL DIGIT -> matches [0-9]`        | This is best used with the `=>` arrow for detecting longer strings |
 | `endswith` | Looks for a string that ends with the given string                             | `FILETYPE IMAGE -> endswith ".png"`     | There will never be a `startswith` rule type due to how it will work just like the `is` rule type with `->` and will never find a complete match with the `=>` arrow |
+
+#### Examples
+Still confused? Here's some example rules and what they mean
+
+Detects the string `print`
+```
+IDENTIFIER PRINT -> is "print"
+```
+
+Detects any string between double quotes (`"`)
+```
+LITERAl STRING -> between '"' and '"'
+```
+
+Detects a string of numbers
+```
+LITERAL NUMBER => matches [0-9]+
+```
+
 
 ### Constants
 All constants go under the `#CONSTANTS` heading
