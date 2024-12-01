@@ -231,16 +231,16 @@ def tokenise(rules_path: str, code_path: str) -> list:
         tokens.append(
             {
                 "class": "ERROR",
-                "subclass": "UNFIISHED_TOKEN",
+                "subclass": "UNFINISHED_TOKEN",
                 "content": current_token,
                 "start_position": recent_token_end + 1
             }
         )
 
-    # for rule in rules:
-    #     print(rule)
-    # print()
-    # for token in tokens:
-    #     print(token)
+    for rule in rules:
+        print(rule)
+    print()
+    for token in tokens:
+        print(token)
     
     return tokens
