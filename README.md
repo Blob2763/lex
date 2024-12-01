@@ -4,7 +4,7 @@ A programming language tokenizer
 ## Setting up
 1. Download `lex.py` by going to [lex/lex.py](https://github.com/Blob2763/lex/blob/main/lex.py) and pressing the download button
 2. Add `lex.py` to the folder where you need to use it
-> [!WARNING]  
+> [!CAUTION]  
 > `lex.py` has to be in the same folder for it to work, not a child folder or parent folder
 3. Add the following code to the python file that is using lex
 ```py
@@ -19,7 +19,7 @@ Tokenising code is very simple, you just need to provide a **rules file** and a 
 > [!NOTE]  
 > The code file does not have to be a `.txt` file! You can choose any file extension
 
-> [!WARNING]  
+> [!CAUTION]  
 > The rules file must have the `.lexif` file extension
 
 Once you've added your rules file and code file, the file directory should look like this:
@@ -164,6 +164,7 @@ Error tokens look the same as normal tokens, but will always have the class `ERR
 | `UNFINISHED_TOKEN` | There was some text at the end of the file that did not match a token. This could signify there is an error in the code somewhere within the token content |
 
 ## Nerd stuff
+### How tokenising works
 The way lex finds tokens is by building a token going from the start of the file to the end of the file, if the token matches a rule, the token is added to a list and a new token is built. If not, the next character is added.
 
 Here's an example:
@@ -207,3 +208,69 @@ print("Hello, World")
 | `‎` | `[PRINT, LPAREN, STRING, RPAREN]` |
 
 *The class name, content, start position, and end position have been left out
+
+### Other functions in `lex.py`
+> [!CAUTION]
+> These are helper functions for `tokenise()` editing them could break the functionality of the main tokeniser
+
+> [!NOTE]
+> Most of these functions do not have any real uses other than tokenisation, it is not reccomended to use any of the functions listed below
+
+#### `extract_quote_strings(string)`
+Extracts all substrings surrounded by a pair of quotes. Quotes can be single (') or double ("), but each pair of quotes must consist of two of the same quotes.
+
+For example, `extract_quote_strings('Hello, "world"!')` -> `["world"]`
+
+Parameters:
+| Name | Type | Description |
+|------|------|-------------|
+| `string` | `str` | the main string |
+
+
+Returns:
+| Name | Type | Description |
+|------|------|-------------|
+| `substrings_found` | `list` | a list of all the substrings found, the original quotes are not in the string |
+
+#### `is_following_rule(string, rule)`
+Checks whether a certain string is following a rule.
+
+Parameters:
+| Name | Type | Description |
+|------|------|-------------|
+| `string` | `str` | the string to test |
+| `rule` | `dict` | the rule to test against |
+
+Returns:
+| Name | Type | Description |
+|------|------|-------------|
+| `is_pass` | `bool` | whether or not the string follows the rule |
+
+#### `split_rule_string(rule_string)`
+Splits a rule string into separate parts.
+
+Parameters:
+| Name | Type | Description |
+|------|------|-------------|
+| `rule_string` | `str` | the rule string to be split |
+
+Returns:
+| Name | Type | Description |
+|------|------|-------------|
+| `match_part` | `str` | all the text after the arrow |
+| `class_name` | `str` | the name of the class of the rule |
+| `subclass_name` | `str` | the name of the subclass of the rule |
+| `match_type` | `str` | the type of match defined by the arrow |
+
+#### `generate_rules(rules_file)`
+Generates a list of rules based on the contents of a rules file.
+
+Parameters:
+| Name | Type | Description |
+|------|------|-------------|
+| `rules_file` | `str` | the rules in the rules file |
+
+Returns:
+| Name | Type | Description |
+|------|------|-------------|
+| `rules` | `list` | a list of all the rules as dictionaries |
