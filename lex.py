@@ -242,5 +242,5 @@ def tokenise(rules_path: str, code_path: str) -> list:
     # print()
     # for token in tokens:
     #     print(token)
-        
+    
     return tokens
