@@ -74,7 +74,7 @@ You can use any class name you want, but here are some recommendations:
 | `LITERAL` | Things that represent fixed values like strings, numbers, boolean values, etc. |
 | `OPERATOR` | Things that perform operations like `+`, `-`, `*`, etc. |
 | `DELIMITER` | Things that define boundaries in the code like `(`, `;`, `}`, etc. |
-| `IGNORE` | Things to ignore in the code like comments |
+| `IGNORE` | Things to ignore in the code like comments or whitespace |
 
 > [!WARNING]  
 > The `ERROR` class name is reserved for lexing errors, like an unfinished token at the end of a file. Usage of the `ERROR` class is not prohibited, but it is not reccomended unless you know what you are doing.
