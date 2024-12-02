@@ -233,7 +233,7 @@ print("Hello, World")
 > These are helper functions for `tokenise()` editing them could break the functionality of the main tokeniser
 
 > [!NOTE]
-> Most of these functions do not have any real uses other than tokenisation, it is not reccomended to use any of the functions listed below
+> Most of these functions do not have any real uses other than tokenisation, it is not recommended to use any of the functions listed below
 
 #### `extract_quote_strings(string)`
 Extracts all substrings surrounded by a pair of quotes. Quotes can be single (') or double ("), but each pair of quotes must consist of two of the same quotes.
