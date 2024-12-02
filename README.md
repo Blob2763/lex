@@ -99,6 +99,25 @@ The rule type tells lex how to detect the token
 | `matches`  | Looks for a string that matched a regex pattern                                | `LITERAL DIGIT -> matches [0-9]`        | This is best used with the `=>` arrow for detecting longer strings |
 | `endswith` | Looks for a string that ends with the given string                             | `FILETYPE IMAGE -> endswith ".png"`     | There will never be a `startswith` rule type due to how it will work just like the `is` rule type with `->` and will never find a complete match with the `=>` arrow |
 
+#### Rule Priority
+> [!NOTE]  
+> Rules higher up in the file get checked first
+
+`let` is a `KEYWORD LET`
+```
+#RULES
+KEYWORD LET -> is "let"
+IDENTIFIER VARIABLE => matches ^[a-zA-Z]+$
+```
+
+`let` is an `IDENTIFIER VARIABLE`
+```
+#RULES
+IDENTIFIER VARIABLE => matches ^[a-zA-Z]+$
+KEYWORD LET -> is "let"
+```
+`^[a-zA-Z]+$` is regex that matches a string of letters
+
 #### Examples
 Still confused? Here's some example rules and what they mean
 
