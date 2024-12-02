@@ -19,7 +19,7 @@ Tokenising code is very simple, you just need to provide a **rules file** and a 
 > [!NOTE]  
 > The code file does not have to be a `.txt` file! You can choose any file extension
 
-> [!CAUTION]  
+> [!IMPORTANT]  
 > The rules file must have the `.lexif` file extension
 
 Once you've added your rules file and code file, the file directory should look like this:
