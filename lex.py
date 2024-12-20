@@ -197,7 +197,11 @@ def tokenise(rules_path: str, code_path: str) -> list:
     tokens = []
     current_token = ""
     recent_token_end = -1
+    line_number = 1
     for i, char in enumerate(code):
+        if char == "\n":
+            line_number += 1
+        
         current_token += char
 
         for rule in rules:
@@ -221,7 +225,8 @@ def tokenise(rules_path: str, code_path: str) -> list:
                         "subclass": rule["subclass"],
                         "content": current_token,
                         "start_position": recent_token_end + 1,
-                        "end_position": i
+                        "end_position": i,
+                        "line_number": line_number
                     }
                 )
                 recent_token_end = i
@@ -233,14 +238,9 @@ def tokenise(rules_path: str, code_path: str) -> list:
                 "class": "ERROR",
                 "subclass": "UNFINISHED_TOKEN",
                 "content": current_token,
-                "start_position": recent_token_end + 1
+                "start_position": recent_token_end + 1,
+                "line_number": line_number
             }
         )
-
-    # for rule in rules:
-    #     print(rule)
-    # print()
-    # for token in tokens:
-    #     print(token)
     
     return tokens
