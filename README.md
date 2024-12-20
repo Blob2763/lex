@@ -173,7 +173,7 @@ LITERAL DIGIT -> matches [DIGIT REGEX]
 ### Tokens
 The `tokenise` function returns a list of tokens in the order they appeared in the file. Here's an example of a token:
 ```json
-{ "class": "LITERAl", "subclass": "STRING", "content": "'Hello, World!'", "start_position": 24, "end_position": 38, 'line_number': 5 }
+{ "class": "LITERAl", "subclass": "STRING", "content": "'Hello, World!'", "start_position": 24, "end_position": 38, "line_number": 5 }
 ```
 
 #### Error tokens
