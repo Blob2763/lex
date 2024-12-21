@@ -196,13 +196,14 @@ def tokenise(rules_path: str, code_path: str) -> list:
 
     code = open(code_path, "r").read()
 
+    line_start_positions = [0] + [m.end() for m in re.finditer("\n", code)]
+    
     tokens = []
     current_token = ""
     recent_token_end = -1
     line_number = 1
     for i, char in enumerate(code):
-        if char == "\n":
-            line_number += 1
+        line_number = len([line_start_position for line_start_position in line_start_positions if line_start_position <= i])
         
         current_token += char
 
