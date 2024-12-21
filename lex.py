@@ -1,3 +1,5 @@
+# Docs at https://github.com/Blob2763/lex
+
 import re
 
 def extract_quote_strings(string: str) -> list:
@@ -239,6 +241,7 @@ def tokenise(rules_path: str, code_path: str) -> list:
                 "subclass": "UNFINISHED_TOKEN",
                 "content": current_token,
                 "start_position": recent_token_end + 1,
+                "end_position": i,
                 "line_number": line_number
             }
         )
