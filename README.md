@@ -182,6 +182,28 @@ Error tokens look the same as normal tokens, but will always have the class `ERR
 |----------|---------|
 | `UNFINISHED_TOKEN` | There was some text at the end of the file that did not match a token. This could signify there is an error in the code somewhere within the token content |
 
+### Groups
+All constants go under the `#GROUPS` heading
+
+Groups are useful for making tokens that can't be made using normal rules
+
+Here's what a group definition looks like:
+```
+OPERATION LESS_EQUAL -> OPERATION LESS_THAN + OPERATION EQUALS
+```
+Let's break it down:
+| Result (class and subclass) | Arrow | Part 1 (class and subclass) | Plus | Part 2 (class and subclass) |
+|-|-|-|-|-|
+| `OPERATION LESS_EQUAL` | `->` | `OPERATION LESS_THAN` | `+` | `OPERATION EQUALS` |
+
+A group "merges" two tokens together to create a new token. Using the example above, if there was an `OPERATION LESS_THAN` and then an `OPERATION LESS_THAN` token, they would merge together into a single `OPERATION LESS_EQUAL` token. If the tokens are on separate lines, the first token's line number is used in the new token. The content of the new token is the individual token's contents but concatenated together.
+
+> [!NOTE]  
+> Groups higher up in the file get checked first.
+
+> [!TIP]
+> Groups are recursive, so you can reference the result token as a part in its own definition.
+
 ## Nerd stuff
 ### How tokenising works
 The way lex finds tokens is by building a token going from the start of the file to the end of the file, if the token matches a rule, the token is added to a list and a new token is built. If not, the next character is added.
